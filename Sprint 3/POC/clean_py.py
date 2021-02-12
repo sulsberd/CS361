@@ -49,9 +49,9 @@ def auto_run(item_type, category_type, num_generate, csv_file):
 # Delete button func
 def myDelete():
     try:
-        myLabel.destroy()
+        #myLabel.destroy()
         myButton['state'] = NORMAL
-        show_Label.destroy()
+        #show_Label.destroy()
         show_button['state'] = NORMAL
     except:
         return
@@ -61,30 +61,31 @@ def myClick():
     global myLabel
     global num
     num = e.get()
-    print(num + 'num in here')
-    myLabel = Label(root, text=num)
+    #print(num + 'num in here')
+    #myLabel = Label(root, text=num)
     #e.delete(0, 'end')
-    myLabel.pack()
+    #myLabel.pack()
     myButton['state'] = DISABLED
 
 #Drop down box
 # Defining click def as a string bc our variables are strings
 # Using a list to populate the dropdown
 
+"""
 def show():
     global show_Label
     click = clicked.get()
     show_Label = Label(root, text=click)
     show_Label.pack(pady=10)
     show_button['state'] = DISABLED
-
+"""
 def new_search():
     fh.seek(0)
     Gen_button['state'] = NORMAL
-    myLabel.destroy()
+    #myLabel.destroy()
     myButton['state'] = NORMAL
-    show_Label.destroy()
-    show_button['state'] = NORMAL
+    #show_Label.destroy()
+    #DeleteButton['state'] = NORMAL
 
 #Generate button
 
@@ -92,11 +93,13 @@ def new_search():
 def show_gen():
     global gen_label
     clicked_gen = clicked_generate.get()
-    gen_label = Label(root, text=clicked_gen)
-    gen_label.pack(pady=10)
+    #gen_label = Label(root, text=clicked_gen)
+    #gen_label.pack(pady=10)
 
 def normal():
     """This is used as the GUI helper"""
+    myButton['state'] = DISABLED
+    #DeleteButton['state'] = DISABLED
     step_before = alg_helper()
     output_headers = ('#', 'output_item_name', 'output_item_rating', 'output_item_num_reviews')
         
@@ -107,10 +110,23 @@ def normal():
         temp_row.append(rows[5])
         temp_row.append(rows[7])
         cut_row.append(temp_row)
-    
-    my_tree = ttk.Treeview(root)
+
+  
+   # Create Treeview Frame
+    tree_frame = Frame(root)
+    tree_frame.pack(pady=20)
+
+    # Treeview Scrollbar
+    tree_scroll = Scrollbar(tree_frame)
+    tree_scroll.pack(side=RIGHT, fill=Y)
+
+    # Create Treeview
+    my_tree = ttk.Treeview(tree_frame, yscrollcommand=tree_scroll.set)
     my_tree['columns'] = output_headers
 
+    #Configure scrollbar
+    tree_scroll.config(command=my_tree.yview)
+    
     #Format columns
     my_tree.column("#0", width=0, stretch=NO)
     my_tree.column('#', anchor=CENTER, width=40)
@@ -134,7 +150,7 @@ def normal():
         my_tree.insert(parent="", index='end', iid=counter, values=(counter + 1, i[0], i[1], i[2]))
         counter +=1
         
-    my_tree.pack(pady=2)
+    my_tree.pack()
 
 def alg_helper():
     Gen_button['state'] = DISABLED
@@ -424,7 +440,16 @@ def main():
     global root
     root = Tk()
     root.title('Life Generator')
-    root.geometry("800x600")
+    root.geometry("1000x1200")
+    global frame_above
+    frame_above = Frame(root)
+    frame_above.pack(side = TOP)
+    global frame_top
+    frame_top = Frame(root)
+    global frame_bottom
+    frame_bottom = Frame(root)
+    frame_top.pack(side = TOP)
+    frame_bottom.pack(side = BOTTOM)
     global fh
     try:
         fh = open('CSV_DOC.csv', "r", encoding='utf-8')
@@ -457,26 +482,27 @@ def main():
 
     # Number Input boxes
     global e 
-    e = Entry(root, width =25)
-    e.pack()
+    e = Entry(frame_top, width =25)
+    e.grid(row = 0, column = 0, padx = 10)
     e.insert(0, "3")
 
     global myButton
-    myButton = Button(root, text="Confirm # of Results", command=myClick)
-    myButton.pack()
+    myButton = Button(frame_top, text="Confirm Parameters", width = 25, command=myClick)
+    myButton.grid(row = 0, column = 1, padx = 10)
 
     #Drop down box
     global drop
-    drop = OptionMenu(root, clicked, *cat_arr[1:])
-    drop.pack()
-
+    drop = OptionMenu(frame_top, clicked, *cat_arr[1:])
+    drop.grid(row = 1, column = 0)
+    """
     global show_button
-    show_button = Button(root, text="Show Selection", command=show)
-    show_button.pack()
-
+    show_button = Button(frame_top, text="Confirm Category", width = 25, command=show)
+    show_button.grid(row = 1, column = 1)"""
+    """
     global DeleteButton
-    DeleteButton = Button(root, text = "Clear parameters", command=myDelete)
-    DeleteButton.pack(pady=10)
+    DeleteButton = Button(frame_top, text = "Clear parameters", width = 25, command=myDelete)
+    DeleteButton.grid(row = 1, column = 1)
+    """
 
     # Generate stuff
     global clicked_generate
@@ -484,8 +510,8 @@ def main():
     clicked_generate.set('Generate!!!!!!!!!!')
 
     global Gen_button
-    Gen_button = Button(root, text="Generate", command=normal)
-    Gen_button.pack()
+    Gen_button = Button(frame_top, text="Generate", width = 25, command=normal)
+    Gen_button.grid(row = 0, column = 2, padx = 10)
 
     # Reset button
     global clicked_newSearch
@@ -493,8 +519,8 @@ def main():
     clicked_newSearch.set('Generate!!!!!!!!!!')
 
     global newSearch_button
-    newSearch_button = Button(root, text="New Search", command=new_search)
-    newSearch_button.pack()
+    newSearch_button = Button(frame_top, text="New Search", width = 25, command=new_search)
+    newSearch_button.grid(row = 0, column = 3, padx = 10)
 
     #myTree = ttk.Treeview(root)
 
