@@ -1,50 +1,50 @@
 from tkinter import *
+from tkinter import ttk
 import csv
 import sys
 
-root = Tk()
-root.title('Life Generator')
-root.geometry("400x400")
+#root = Tk()
+#root.title('Life Generator')
+#root.geometry("800x600")
 
-#if len(sys.argv) > 1:
-finput = open('input.csv', "r", encoding='utf-8-sig')
-input_file = csv.reader(finput)
-print('Input upload successful')
+def auto_variables(input_arr):
+    """This prepares the values in the input.csv for the auto-run"""
+    result_dictionary = {}
+    #print(input_arr, 'input arr')
+    #print(input_arr[0])
+    header = 0
+    key_values = []
+    for i in range(len(input_arr[0])):
+        temp = []
+        key_n = input_arr[0][i]
+        value_n = input_arr[1][i]
+        temp.append(key_n)
+        temp.append(value_n)
+        key_values.append(temp)
 
-input_arr = []
-counter = 0
-for row in input_file:
-    try:            
-        input_arr.append(row)
+    for i in range(len(key_values)):
+        key = key_values[i][0]
+        value = key_values[i][1]
+        result_dictionary[key] = value        
 
-    except:
-        continue
+        #input_item_type = None
 
-print(input_arr, 'input arr')
-
-try:
-    fh = open('CSV_DOC.csv', "r", encoding='utf-8')
-    csv_file = csv.reader(fh)
-    print('Upload successful')
-    print(csv_file)
-    cat_arr = []
-    for row in csv_file:
-        try:
-            if row[8]== "":
-                continue
-            else:
-                item = row[8]
-                split = item.split(">")
-                if split[0] in cat_arr:
-                    continue
-                else:
-                    cat_arr.append(split[0])
+    loop = ['input_item_type', 'input_item_category', 'input_number_to_generate']
+    keys = result_dictionary.keys()
     
-        except:
-            continue
-    fh.seek(0)
-except:
-    print('No File was added')
+    item_type = result_dictionary[loop[0]]
+    category_type = result_dictionary[loop[1]]
+    num_generate = result_dictionary[loop[2]]
+
+    #print(item_type, category_type, num_generate)
+    #print(result_dictionary, 'result dictionary')
+    return item_type, category_type, num_generate
+
+def auto_run(item_type, category_type, num_generate, csv_file):
+    print('autorun beep')
+    auto_result = sort_alg(num_generate, category_type, csv_file, 1)
+    #print(auto_result)
+    return auto_result
 
 # Delete button func
 def myDelete():
@@ -78,10 +78,6 @@ def show():
     show_Label.pack(pady=10)
     show_button['state'] = DISABLED
 
-clicked = StringVar()
-clicked.set(cat_arr[1])
-#show_Label = Label(root, text=cat_arr[1]).pack()
-
 def new_search():
     fh.seek(0)
     Gen_button['state'] = NORMAL
@@ -89,6 +85,7 @@ def new_search():
     myButton['state'] = NORMAL
     show_Label.destroy()
     show_button['state'] = NORMAL
+
 #Generate button
 
 # THIS MAY NOT BE USED NOW
@@ -98,20 +95,64 @@ def show_gen():
     gen_label = Label(root, text=clicked_gen)
     gen_label.pack(pady=10)
 
+def normal():
+    """This is used as the GUI helper"""
+    step_before = alg_helper()
+    output_headers = ('#', 'output_item_name', 'output_item_rating', 'output_item_num_reviews')
+        
+    cut_row = []
+    for rows in step_before:
+        temp_row = []
+        temp_row.append(rows[1])
+        temp_row.append(rows[5])
+        temp_row.append(rows[7])
+        cut_row.append(temp_row)
+    
+    my_tree = ttk.Treeview(root)
+    my_tree['columns'] = output_headers
+
+    #Format columns
+    my_tree.column("#0", width=0, stretch=NO)
+    my_tree.column('#', anchor=CENTER, width=40)
+    my_tree.column('output_item_name', anchor=W, width=400)
+    my_tree.column('output_item_rating', anchor=CENTER, width=120)
+    my_tree.column('output_item_num_reviews', anchor=CENTER, width=180)
+
+    #headers
+    my_tree.heading("#0", text="", anchor=CENTER)
+    my_tree.heading("#", text="#", anchor=CENTER)
+    my_tree.heading("output_item_name", text="output_item_name", anchor=CENTER)
+    my_tree.heading("output_item_rating", text="output_item_rating", anchor=CENTER)
+    my_tree.heading("output_item_num_reviews", text="output_item_num_reviews", anchor=CENTER)
+
+    #Data
+    #my_tree.insert(parent="", index='end', iid=0, values=("John", 1, "Pepperoni"))
+
+    #example = ['danny']
+    counter = 0
+    for i in cut_row:
+        my_tree.insert(parent="", index='end', iid=counter, values=(counter + 1, i[0], i[1], i[2]))
+        counter +=1
+        
+    my_tree.pack(pady=2)
+
 def alg_helper():
     Gen_button['state'] = DISABLED
     category = clicked.get()
-    print(num, category)
+    #print(num, category)
 
-    alg_result = sort_alg(num, category)
-    print(alg_result)
+    alg_result = sort_alg(num, category, csv_file)
+    #print(alg_result)
     return alg_result
 
-def sort_alg(num, category_selected):
+def sort_alg(num, category_selected, csv_file, flag=0):
     #Takes category keyword
-    print(num, 'this is num')
+    #print(num, 'this is num')
     number = int(num)
     new_arr = []
+    if flag == 1:
+        category_selected = category_selected + ' '
+
     for row in csv_file:
         try:
             if row[8]== "":
@@ -119,13 +160,15 @@ def sort_alg(num, category_selected):
             else:
                 item = row[8]
                 split = item.split(">")
+                
                 if split[0] == category_selected:
                     new_arr.append(row)
+                    #print('yeye')
                 else:
                     continue
         except:
             continue
-    print(len(new_arr))
+    #print(len(new_arr))
 
     # Sorts by Unique ID
 
@@ -151,28 +194,29 @@ def sort_alg(num, category_selected):
 
     #Sorts top x * 10 by uniq ID
     ten_uniq = merge_sort(top_ten)
-    for i in range(range_num):
-        try:
-            print(ten_uniq[i][0])
-        except:
-            break
+    #for i in range(range_num):
+        #try:
+            #print(ten_uniq[i][0])
+        #except:
+            #break
 
     #Sorts top10uniqID by avg review
     ten_avg = merge_sort(ten_uniq, 2)
-    for i in range(range_num):
-        try:
-            print(ten_avg[i][7])
-        except:
-            break
+    #for i in range(range_num):
+        #try:
+            #print(ten_avg[i][7])
+        #except:
+            #break
 
     final_arr = []
     for i in range(number):
         try:
             final_arr.append(ten_avg[i])
-            print(final_arr[i][0], final_arr[i][7])
+            #print(final_arr[i][0], final_arr[i][7])
         except:
             break
     #Does stuff from there
+    return final_arr
 
 
 def merge(left, right):
@@ -303,37 +347,162 @@ def merge_reviews(left, right, sort_number):
     result += left[left_index:]
     result += right[right_index:]
     return result
+    
+def auto():
+    if len(sys.argv) > 1:
+        fh = open('CSV_DOC.csv', "r", encoding='utf-8-sig')
+        global csv_file
+        csv_file = csv.reader(fh)
+        print('Upload successful')
+        print(csv_file)
+        cat_arr = []
 
-# Number Input boxes 
-e = Entry(root, width =25)
-e.pack()
-e.insert(0, "3")
+        finput = open('input.csv', "r", encoding='utf-8-sig')
+        input_file= csv.reader(finput)
+        print('Input upload successful')
 
-myButton = Button(root, text="Confirm # of Results", command=myClick)
-myButton.pack()
+        input_arr = []
+        counter = 0
+        for row in input_file:
+            try:            
+                input_arr.append(row)
 
-#Drop down box
-drop = OptionMenu(root, clicked, *cat_arr[1:])
-drop.pack()
+            except:
+                continue
 
-show_button = Button(root, text="Show Selection", command=show)
-show_button.pack()
+        #print(input_arr, 'input arr')
+        citem_type, ccategory_type, cnum_generate = auto_variables(input_arr)
+        #print(citem_type)
+        #print(ccategory_type)
+        #Fprint(cnum_generate)
+        automatic_result = auto_run(citem_type, ccategory_type, cnum_generate, csv_file)
+        #print(automatic_result[0])
+    
+        output_file = open('output.csv', 'w', newline='')
 
-DeleteButton = Button(root, text = "Clear parameters", command=myDelete)
-DeleteButton.pack(pady=10)
+        output_headers = ['input_item_type', 'input_item_category', 'input_number_to_generate',
+        'output_item_name', 'output_item_rating', 'output_item_num_reviews']
 
-# Generate stuff
-clicked_generate = StringVar()
-clicked_generate.set('Generate!!!!!!!!!!')
+        output_writer = csv.writer(output_file)
+        output_writer.writerow(output_headers)
+        temp_row = []
+        for rows in automatic_result:
+            temp_row.append(citem_type)
+            temp_row.append(ccategory_type)
+            temp_row.append(cnum_generate)
+            temp_row.append(rows[1])
+            temp_row.append(rows[5])
+            temp_row.append(rows[7])
+            output_writer.writerow(temp_row)
+            temp_row=[]
+        #print(automatic_result)
 
-Gen_button = Button(root, text="Generate", command=alg_helper)
-Gen_button.pack()
+        output_file.close()
 
-# Reset button
-clicked_newSearch = StringVar()
-clicked_newSearch.set('Generate!!!!!!!!!!')
 
-newSearch_button = Button(root, text="New Search", command=new_search)
-newSearch_button.pack()
-root.mainloop()
+        fh.seek(0)
+        counter = 0
+        headers = 0
+        while counter == 0:
+            for row in csv_file:
+                headers = row
+                break
+            counter +=1
+        #print(headers)
+        
+        count = 0
+        header_keys = output_headers
+        #print(header_keys, 'header keys')
+        #print(headers, 'headers')
+        #for heads in headers:
+            #if heads == "":
+                #continue
+            #if heads in header_keys:
+                #print('heads yesyes')
 
+def main():
+    global root
+    root = Tk()
+    root.title('Life Generator')
+    root.geometry("800x600")
+    global fh
+    try:
+        fh = open('CSV_DOC.csv', "r", encoding='utf-8')
+        global csv_file
+        csv_file = csv.reader(fh)
+        print('Upload successful')
+        print(csv_file)
+        cat_arr = []
+        for row in csv_file:
+            try:
+                if row[8]== "":
+                    continue
+                else:
+                    item = row[8]
+                    split = item.split(">")
+                    if split[0] in cat_arr:
+                        continue
+                    else:
+                        cat_arr.append(split[0])
+        
+            except:
+                continue
+        fh.seek(0)
+    except:
+        print('No File was added')
+
+    global clicked
+    clicked = StringVar()
+    clicked.set(cat_arr[1])
+
+    # Number Input boxes
+    global e 
+    e = Entry(root, width =25)
+    e.pack()
+    e.insert(0, "3")
+
+    global myButton
+    myButton = Button(root, text="Confirm # of Results", command=myClick)
+    myButton.pack()
+
+    #Drop down box
+    global drop
+    drop = OptionMenu(root, clicked, *cat_arr[1:])
+    drop.pack()
+
+    global show_button
+    show_button = Button(root, text="Show Selection", command=show)
+    show_button.pack()
+
+    global DeleteButton
+    DeleteButton = Button(root, text = "Clear parameters", command=myDelete)
+    DeleteButton.pack(pady=10)
+
+    # Generate stuff
+    global clicked_generate
+    clicked_generate = StringVar()
+    clicked_generate.set('Generate!!!!!!!!!!')
+
+    global Gen_button
+    Gen_button = Button(root, text="Generate", command=normal)
+    Gen_button.pack()
+
+    # Reset button
+    global clicked_newSearch
+    clicked_newSearch = StringVar()
+    clicked_newSearch.set('Generate!!!!!!!!!!')
+
+    global newSearch_button
+    newSearch_button = Button(root, text="New Search", command=new_search)
+    newSearch_button.pack()
+
+    #myTree = ttk.Treeview(root)
+
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        auto()
+    else:
+        main()
