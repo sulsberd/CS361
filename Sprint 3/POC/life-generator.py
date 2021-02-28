@@ -8,6 +8,8 @@ from tkinter import *
 from tkinter import ttk
 import csv
 import sys
+from subprocess import Popen, PIPE
+import os
 
 def auto():
     """auto triggers from main if arg added to sys.argv"""
@@ -30,7 +32,8 @@ def auto():
             input_arr.append(row)
         except:
             continue
-    
+
+    addContent()
     # Sorting per Requirements
     citem_type, ccategory_type, cnum_generate = auto_variables(input_arr)
     automatic_result = sort_alg(cnum_generate, ccategory_type, csv_file, 1)
@@ -57,6 +60,18 @@ def auto():
 
     fh.seek(0)
 
+def addContent():
+    process = Popen(['python.exe', 'Content_Generator.py'], stdout=PIPE, stderr=PIPE)
+    stdout, stderr = process.communicate()
+
+    content_Output = open('outputCG.csv', "r", encoding='utf-8-sig')
+    contentOutputCSV= csv.reader(content_Output)
+    rawContentText = []
+    for lines in contentOutputCSV:
+        rawContentText.append(lines)
+
+    pureContentText = rawContentText[2][1]
+    return pureContentText
 
 def auto_variables(input_arr):
     """Takes input arr and returns the values associated with each header
@@ -101,10 +116,11 @@ def normal():
     Gen_button['state'] = DISABLED
     #DeleteButton['state'] = DISABLED
     category = clicked.get()
-
+    
     step_before = sort_alg(num, category, csv_file)
     output_headers = ('#', 'output_item_name', 'output_item_rating', 'output_item_num_reviews')
         
+    contentGeneratorText = addContent()
     cut_row = []
     for rows in step_before:
         temp_row = []
@@ -125,6 +141,24 @@ def normal():
     # Create Treeview
     my_tree = ttk.Treeview(tree_frame, yscrollcommand=tree_scroll.set)
     my_tree['columns'] = output_headers
+
+    # Content Generator Tree
+    contentFrame = Frame(root)
+    contentFrame.pack(pady=20)
+
+    
+    contentHeaders = 'Content'
+    contentTree = ttk.Treeview(contentFrame)
+    contentTree['columns'] = contentHeaders
+
+    contentTree.column("#0", width=0, stretch=YES)
+    contentTree.column('Content', anchor=CENTER, width=400)
+
+    contentTree.heading("#0", text="", anchor=CENTER)
+    contentTree.heading('Content', text="Content", anchor=CENTER)
+
+    print(contentGeneratorText)
+    contentTree.insert(parent="", index='end', iid=0, values=(contentGeneratorText))
 
     #Configure scrollbar
     tree_scroll.config(command=my_tree.yview)
@@ -150,6 +184,7 @@ def normal():
         counter +=1
         
     my_tree.pack()
+    contentTree.pack()
 
 
 def sort_alg(num, category_selected, csv_file, flag=0):
